@@ -1,20 +1,21 @@
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 
-class Person {
+class FamilyMember {
     private String name;
-    private int birthYear;
     private String gender;
-    private List<Person> children;
+    private FamilyMember parent;
+    private List<FamilyMember> children;
 
-    public Person(String name, int birthYear, String gender) {
+    public FamilyMember(String name, String gender, FamilyMember parent) {
         this.name = name;
-        this.birthYear = birthYear;
         this.gender = gender;
-        this.children = new ArrayList<>();
+        this.parent = parent;
+        this.children = new LinkedList<>();
     }
 
-    public void addChild(Person child) {
+    public void addChild(FamilyMember child) {
         children.add(child);
     }
 
@@ -22,42 +23,108 @@ class Person {
         return name;
     }
 
-    public int getBirthYear() {
-        return birthYear;
-    }
-
     public String getGender() {
         return gender;
     }
 
-    public List<Person> getChildren() {
+    public FamilyMember getParent() {
+        return parent;
+    }
+
+    public List<FamilyMember> getChildren() {
         return children;
     }
 }
 
-public class FamilyTree {
-    public static void printLineage(Person person, int level) {
-        String indentation = "  ".repeat(level);
-        System.out.println(indentation + person.getName() + " (" + person.getBirthYear() + ", " + person.getGender() + ")");
-        for (Person child : person.getChildren()) {
-            printLineage(child, level + 1);
+class FamilyTree {
+    private LinkedList<FamilyMember> members;
+    private FamilyMember root;
+
+    public FamilyTree(String rootName, String rootGender) {
+        root = new FamilyMember(rootName, rootGender, null);
+        members = new LinkedList<>();
+        members.add(root);
+    }
+
+    public void addMember(String name, String gender, String parentName) {
+        FamilyMember parent = findMember(parentName);
+        if (parent != null) {
+            FamilyMember newMember = new FamilyMember(name, gender, parent);
+            parent.addChild(newMember);
+            members.add(newMember);
         }
     }
 
-    public static void main(String[] args) {
-        Person grandparent1 = new Person("Alice", 1950, "Female");
-        Person grandparent2 = new Person("Bob", 1952, "Male");
-        Person parent1 = new Person("Charlie", 1975, "Male");
-        Person parent2 = new Person("Diana", 1980, "Female");
-        Person child1 = new Person("Eva", 2005, "Female");
-        Person child2 = new Person("Frank", 2010, "Male");
+    public List<String> findLineage(String name) {
+        FamilyMember person = findMember(name);
+        List<String> lineage = new LinkedList<>();
+        while (person != null) {
+            lineage.add(person.getName());
+            person = person.getParent();
+        }
+        return lineage;
+    }
 
-        grandparent1.addChild(parent1);
-        grandparent1.addChild(parent2);
-        parent1.addChild(child1);
-        parent2.addChild(child2);
-
-        printLineage(grandparent1, 0);
+    private FamilyMember findMember(String name) {
+        for (FamilyMember member : members) {
+            if (member.getName().equals(name)) {
+                //System.out.println(member);
+                return member;
+            }
+        }
+        return null;
     }
 }
 
+public class FamilyTreeDemo {
+    public static void main(String[] args) {
+        FamilyTree familyTree = new FamilyTree("Root", "male");
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n1. Add Family Member");
+            System.out.println("2. Find Lineage");
+            System.out.println("3. Exit");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume the newline character
+
+            switch (choice) {
+                case 1:
+                {
+                    System.out.print("Enter the name: ");
+                    String name = scanner.nextLine();
+                    System.out.print("Enter the gender (male/female): ");
+                    String gender = scanner.nextLine();
+                    System.out.print("Enter the parent's name: ");
+                    String parentName = scanner.nextLine();
+                    familyTree.addMember(name, gender, parentName);
+                    System.out.println("Family member added successfully.");
+                    break;
+                }
+                case 2:
+                {
+                    System.out.print("Enter the name to find lineage: ");
+                    String findName = scanner.nextLine();
+                    List<String> lineage = familyTree.findLineage(findName);
+                    System.out.print("Lineage of " + findName + ": ");
+                    for (int i = 0; i < lineage.size(); i++) {
+                          System.out.print(lineage.get(i));
+                          if (i < lineage.size() - 1) {
+                                   System.out.print(" > ");
+                                }
+                    break;
+                }
+            }
+                case 3:
+                {
+                    System.out.println("Exiting the program.");
+                    scanner.close();
+                    System.exit(0);
+                }
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+}
